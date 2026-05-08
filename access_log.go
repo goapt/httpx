@@ -10,15 +10,12 @@ import (
 func AccessLog(logger *slog.Logger) Middleware {
 	return func(rt http.RoundTripper) http.RoundTripper {
 		return sloghttp.NewRoundTripper(logger, rt, sloghttp.Config{
-			DefaultLevel:       slog.LevelInfo,
-			ClientErrorLevel:   slog.LevelWarn,
-			ServerErrorLevel:   slog.LevelError,
-			WithRequestID:      true,
+			Level:              slog.LevelInfo,
 			WithUserAgent:      true,
-			WithRequestHeader:  true,
 			WithRequestBody:    true,
-			WithResponseHeader: true,
+			WithRequestHeader:  true,
 			WithResponseBody:   true,
+			WithResponseHeader: true,
 		})
 	}
 }

@@ -15,13 +15,11 @@ func Debug() Middleware {
 		})
 
 		return sloghttp.NewRoundTripper(logger, rt, sloghttp.Config{
-			DefaultLevel:       slog.LevelDebug,
-			ClientErrorLevel:   slog.LevelDebug,
-			ServerErrorLevel:   slog.LevelDebug,
-			WithRequestID:      true,
+			Level:              slog.LevelDebug,
 			WithUserAgent:      true,
-			WithRequestHeader:  true,
 			WithRequestBody:    true,
+			WithRequestHeader:  true,
+			WithResponseBody:   true,
 			WithResponseHeader: true,
 		})
 	}
