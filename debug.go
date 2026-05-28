@@ -3,6 +3,7 @@ package httpx
 import (
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/goapt/logger"
 	"github.com/goapt/logger/sloghttp"
@@ -10,9 +11,7 @@ import (
 
 func Debug() Middleware {
 	return func(rt http.RoundTripper) http.RoundTripper {
-		logger := logger.New(&logger.Config{
-			Mode: logger.ModeStd,
-		})
+		logger := logger.New(logger.NewJSONHandler(os.Stdout, logger.WithLevel(slog.LevelDebug)))
 
 		return sloghttp.NewRoundTripper(logger, rt, sloghttp.Config{
 			Level:              slog.LevelDebug,

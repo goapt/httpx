@@ -15,7 +15,6 @@ import (
 
 	"github.com/goapt/httpx"
 
-	"github.com/goapt/logger"
 	"github.com/goapt/logger/sloghttp"
 
 	"github.com/stretchr/testify/assert"
@@ -36,10 +35,7 @@ func TestHttpError(t *testing.T) {
 
 func TestRequestWithLogInfo(t *testing.T) {
 	buf := strings.Builder{}
-	l := logger.New(&logger.Config{
-		Mode:   logger.ModeCustom,
-		Writer: &buf,
-	})
+	l := slog.New(slog.NewJSONHandler(&buf, nil))
 
 	request := map[string]any{"app_key": "ARkBS09IS0saFExLThQ", "sign": "test", "time": "test"}
 	client := httpx.NewClient(httpx.WithMiddleware(httpx.AccessLog(l)))
