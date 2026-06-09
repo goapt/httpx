@@ -3,7 +3,6 @@ module github.com/goapt/httpx
 go 1.26.0
 
 require (
-	github.com/goapt/logger v1.8.0
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.19.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0

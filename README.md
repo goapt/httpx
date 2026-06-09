@@ -14,7 +14,7 @@ Simple, composable HTTP client with middleware for Go.
 ## Features
 
 - Option-based client configuration (timeout, transport, middlewares)
-- Composable, chainable middlewares (logging, debugging, tracing, mocking)
+- Composable, chainable middlewares (tracing, mocking, and custom transports)
 - Pluggable transport layer (custom TLS, connection tuning)
 - Friendly for unit tests via an HTTP mock middleware
 
@@ -39,7 +39,7 @@ import (
 func main() {
 	client := httpx.NewClient(
 		httpx.WithTimeout(5*time.Second),
-		httpx.WithMiddleware(httpx.Debug()),
+		httpx.WithMiddleware(httpx.Trace()),
 	)
 
 	req, _ := http.NewRequest(http.MethodGet, "https://httpbin.org/get", nil)
@@ -55,40 +55,36 @@ func main() {
 
 The middleware model wraps a `http.RoundTripper` in a chain, allowing cross-cutting features without coupling to request logic.
 
-- AccessLog: structured access logging
-- Debug: human-readable request/response dump for local development
+- HTTP logging: compose any `http.RoundTripper` middleware from caller code
 - Trace: OpenTelemetry tracing for HTTP client requests
 - Mock: programmable mock responses for tests
+- Custom middleware: plug in logging, metrics, retries, or other RoundTripper wrappers
 
-### AccessLog
+### HTTP Logging
 
 ```go
 import (
 	"bytes"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/goapt/httpx"
 	"github.com/goapt/logger"
+	"github.com/goapt/logger/sloghttp"
 )
 
 func exampleAccessLog() {
-	l := logger.New(&logger.Config{Mode: logger.ModeStd})
-	client := httpx.NewClient(httpx.WithMiddleware(httpx.AccessLog(l)))
+	l := logger.New(logger.NewJSONHandler(os.Stdout, logger.WithLevel(slog.LevelInfo)))
+	client := httpx.NewClient(httpx.WithMiddleware(func(next http.RoundTripper) http.RoundTripper {
+		return sloghttp.NewRoundTripper(l, next, sloghttp.DefaultConfig)
+	}))
 
 	req, _ := http.NewRequest(http.MethodPost, "https://httpbin.org/anything", bytes.NewReader([]byte(`{"k":"v"}`)))
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	resp, _ := client.Do(req)
 	defer resp.Body.Close()
 }
-```
-
-
-### Debug
-
-```go
-client := httpx.NewClient(httpx.WithMiddleware(httpx.Debug()))
-resp, _ := client.Get("https://httpbin.org/json")
-defer resp.Body.Close()
 ```
 
 ### Trace (OpenTelemetry)

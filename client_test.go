@@ -7,15 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/goapt/httpx"
-
-	"github.com/goapt/logger/sloghttp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,30 +29,6 @@ func TestHttpError(t *testing.T) {
 	assert.Nil(t, got)
 }
 
-func TestRequestWithLogInfo(t *testing.T) {
-	buf := strings.Builder{}
-	l := slog.New(slog.NewJSONHandler(&buf, nil))
-
-	request := map[string]any{"app_key": "ARkBS09IS0saFExLThQ", "sign": "test", "time": "test"}
-	client := httpx.NewClient(httpx.WithMiddleware(httpx.AccessLog(l)))
-	b, _ := json.Marshal(request)
-	ctx := context.Background()
-	ctx = sloghttp.NewContextAttributes(ctx, slog.String("other", "is other info"))
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://httpbin.org/anything", bytes.NewReader(b))
-
-	assert.NoError(t, err)
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	_, err = client.Do(req)
-	assert.NoError(t, err)
-
-	fmt.Println(buf.String())
-
-	m := make(map[string]any)
-	err = json.Unmarshal([]byte(buf.String()), &m)
-	assert.NoError(t, err)
-	assert.Equal(t, "is other info", m["other"])
-}
-
 func TestNewClientWithTarce(t *testing.T) {
 	sr := &tracetest.SpanRecorder{}
 	tp := trace.NewTracerProvider(trace.WithSpanProcessor(sr))
@@ -68,7 +40,7 @@ func TestNewClientWithTarce(t *testing.T) {
 	)
 	span.End()
 
-	client := httpx.NewClient(httpx.WithMiddleware(httpx.Debug(), httpx.Trace()))
+	client := httpx.NewClient(httpx.WithMiddleware(httpx.Trace()))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://httpbin.org/json", nil)
 	require.NoError(t, err)
 	resp, err := client.Do(req)
